@@ -22,7 +22,7 @@
 
     <style>
         /* Custom Styles */
-        body { background-color: #f3f4f6; padding-bottom: 70px; } /* Padding for bottom nav */
+        body { background-color: #f3f4f6; padding-bottom: 70px; }
         .glass-header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
         .nav-item.active { color: #3b82f6; }
         .nav-item.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background-color: #3b82f6; border-radius: 2px; }
@@ -56,8 +56,7 @@
 
     <!-- Main Content Area -->
     <main class="mt-16 p-4 flex-grow overflow-y-auto">
-        
-        <!-- ================= VIEW: DASHBOARD ================= -->
+        <!-- View Dashboard -->
         <section id="view-dashboard" class="view-section active">
             <h2 class="text-xl font-bold mb-4">Dashboard</h2>
             
@@ -97,7 +96,7 @@
             </div>
         </section>
 
-        <!-- ================= VIEW: ODNER ================= -->
+        <!-- View Odner -->
         <section id="view-odner" class="view-section hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold">Daftar Odner</h2>
@@ -111,12 +110,10 @@
                 <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
             </div>
 
-            <div id="odner-list" class="space-y-3 pb-4">
-                <!-- Data Odner akan dirender di sini -->
-            </div>
+            <div id="odner-list" class="space-y-3 pb-4"></div>
         </section>
 
-        <!-- ================= VIEW: BOX ================= -->
+        <!-- View Box -->
         <section id="view-box" class="view-section hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold">Daftar Box</h2>
@@ -125,12 +122,10 @@
                 </button>
             </div>
             
-            <div id="box-list" class="space-y-3 pb-4">
-                <!-- Data Box akan dirender di sini -->
-            </div>
+            <div id="box-list" class="space-y-3 pb-4"></div>
         </section>
 
-        <!-- ================= VIEW: SCANNER ================= -->
+        <!-- View Scanner -->
         <section id="view-scanner" class="view-section hidden flex flex-col h-full">
             <h2 class="text-xl font-bold mb-2 text-center">Scanner Penempatan</h2>
             
@@ -153,7 +148,6 @@
                 </div>
             </div>
         </section>
-
     </main>
 
     <!-- Bottom Navigation -->
@@ -183,7 +177,7 @@
         </div>
     </nav>
 
-    <!-- Modal Cetak QR (Hidden by default) -->
+    <!-- Modal QR -->
     <div id="qr-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative">
             <button onclick="closeQRModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -197,7 +191,7 @@
         </div>
     </div>
 
-    <!-- Modal Pilihan Cetak Semua QR -->
+    <!-- Modal Cetak Semua -->
     <div id="print-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative">
             <button onclick="closePrintModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -223,6 +217,11 @@
     <!-- Application Script -->
     <script>
         // ==========================================
+        // KONFIGURASI PENTING: GANTI DENGAN URL DEPLOYMENT ANDA
+        // ==========================================
+        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec'; 
+
+        // ==========================================
         // UTILITIES & STATE
         // ==========================================
         const escapeHtml = (unsafe) => {
@@ -241,119 +240,93 @@
             timerProgressBar: true,
         });
 
-        // State variables
+        // State
         let odnerData = [];
         let boxData = [];
         let html5QrcodeScanner = null;
-        let scanState = 'SCAN_ODNER'; // 'SCAN_ODNER' or 'SCAN_BOX'
+        let scanState = 'SCAN_ODNER';
         let scannedOdnerID = null;
 
         // ==========================================
-        // GAS API WRAPPER & MOCK SYSTEM (For Canvas Preview)
+        // API CALL (FETCH)
         // ==========================================
-        const MOCK_DATA = {
-            odner: [
-                { OdnerID: 'OD-20231001-001', NamaOdner: 'Invoice Jan', Deskripsi: 'Pajak', BoxID: '', Status: 'Belum Disimpan', Timestamp: '2023-10-01 10:00:00' },
-                { OdnerID: 'OD-20231001-002', NamaOdner: 'Kontrak Karyawan', Deskripsi: 'HR', BoxID: 'BX-20231001-002', Status: 'Tersimpan', Timestamp: '2023-10-01 11:00:00' }
-            ],
-            box: [
-                { BoxID: 'BX-20231001-001', NamaBox: 'Keuangan', Lokasi: 'Rak A1', Kapasitas: '10', Timestamp: '2023-10-01 09:00:00' },
-                { BoxID: 'BX-20231001-002', NamaBox: 'HRD', Lokasi: 'Rak B2', Kapasitas: '15', Timestamp: '2023-10-01 09:30:00' }
-            ]
-        };
-
-            const API_URL = "https://script.google.com/macros/s/AKfycby_9aJqfozUa3KfMYKqe9pL9xoaYwici7dbv5UeY1Tthn7S_mhFXPQ2xvjyh1AsOXtp/exec";
-
-            const apiCall = async (action, payload = {}) => {
-              showLoader();
-            
-              try {
-                const res = await fetch(API_URL, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                    action,
-                    ...payload
-                  })
-                });
-            
-                const data = await res.json();
+        async function apiCall(action, payload = {}) {
+            showLoader();
+            try {
+                let url = `${API_BASE_URL}?action=${encodeURIComponent(action)}`;
+                
+                let options = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                };
+                
+                const response = await fetch(url, options);
+                const result = await response.json();
                 hideLoader();
-                return data;
-            
-              } catch (err) {
+                return result;
+            } catch (error) {
                 hideLoader();
-                return { success: false, message: err.message };
-              }
-            };
+                console.error('API Error:', error);
+                Swal.fire('Error', 'Gagal terhubung ke server. Periksa koneksi atau URL API.', 'error');
+                return { status: 'error', message: error.message };
+            }
+        }
 
         // ==========================================
-        // UI NAVIGATION & INITIALIZATION
+        // UI NAVIGATION
         // ==========================================
         function switchView(viewName) {
-            // Hide all views
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
-            // Show target
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
             
-            // Update Nav Active State
             const navEl = document.querySelector(`.nav-item[data-target="view-${viewName}"]`);
             if(navEl) navEl.classList.add('active');
 
-            // Handle Camera Lifecycle
             if (viewName === 'scanner') {
                 initScanner();
             } else {
                 stopScanner();
             }
 
-            // Load Data based on view
             if (viewName === 'dashboard') loadDashboard();
             if (viewName === 'odner') loadOdners();
             if (viewName === 'box') loadBoxes();
         }
 
         // ==========================================
-        // LOAD DATA FUNCTIONS
+        // LOAD DATA
         // ==========================================
         async function loadDashboard() {
-            try {
-                const res = await apiCall('getDashboardData');
-                if (res.status === 'success') {
-                    document.getElementById('dash-total-odner').innerText = res.data.totalOdner;
-                    document.getElementById('dash-total-box').innerText = res.data.totalBox;
-                    document.getElementById('dash-tersimpan').innerText = res.data.tersimpan;
-                    document.getElementById('dash-belum').innerText = res.data.belumDisimpan;
-                }
-            } catch (err) { console.error(err); }
+            const res = await apiCall('getDashboardData');
+            if (res.status === 'success') {
+                document.getElementById('dash-total-odner').innerText = res.data.totalOdner;
+                document.getElementById('dash-total-box').innerText = res.data.totalBox;
+                document.getElementById('dash-tersimpan').innerText = res.data.tersimpan;
+                document.getElementById('dash-belum').innerText = res.data.belumDisimpan;
+            }
         }
 
         async function loadOdners() {
-            try {
-                const res = await apiCall('getAllOdners');
-                if (res.status === 'success') {
-                    odnerData = res.data;
-                    renderOdners(odnerData);
-                }
-            } catch (err) { console.error(err); }
+            const res = await apiCall('getAllOdners');
+            if (res.status === 'success') {
+                odnerData = res.data;
+                renderOdners(odnerData);
+            }
         }
 
         async function loadBoxes() {
-            try {
-                const res = await apiCall('getAllBoxes');
-                if (res.status === 'success') {
-                    boxData = res.data;
-                    renderBoxes(boxData);
-                }
-            } catch (err) { console.error(err); }
+            const res = await apiCall('getAllBoxes');
+            if (res.status === 'success') {
+                boxData = res.data;
+                renderBoxes(boxData);
+            }
         }
 
         // ==========================================
-        // RENDER UI FUNCTIONS
+        // RENDER UI
         // ==========================================
         function renderOdners(data) {
             const container = document.getElementById('odner-list');
@@ -406,7 +379,7 @@
         }
 
         // ==========================================
-        // FORMS & MODALS (SweetAlert)
+        // FORMS & MODALS
         // ==========================================
         async function showAddOdnerModal() {
             const { value: formValues } = await Swal.fire({
@@ -474,11 +447,11 @@
         }
 
         // ==========================================
-        // QR CODE GENERATOR
+        // QR GENERATOR
         // ==========================================
         function generateQR(text, id, name) {
             const container = document.getElementById('qrcode-container');
-            container.innerHTML = ''; // clear previous
+            container.innerHTML = '';
             
             new QRCode(container, {
                 text: text,
@@ -566,94 +539,75 @@
             setTimeout(() => {
                 Swal.close();
                 window.print();
-            }, 1500); // Allow time for QR codes to render
+            }, 1500);
         }
 
         // ==========================================
-        // QR SCANNER LOGIC
+        // QR SCANNER
         // ==========================================
         async function initScanner() {
-    if (html5QrcodeScanner) return;
+            if (html5QrcodeScanner) return;
 
-    const qrReader = document.getElementById('qr-reader');
-    qrReader.innerHTML = "";
+            const qrReader = document.getElementById('qr-reader');
+            qrReader.innerHTML = "";
 
-    try {
-        // ❗ DETEKSI iframe (ini penting di Google Apps Script)
-        if (window.top !== window.self) {
-            throw new Error("Camera blocked in iframe (Google Apps Script environment)");
+            try {
+                if (window.top !== window.self) {
+                    throw new Error("Camera blocked in iframe");
+                }
+
+                if (!navigator.mediaDevices?.getUserMedia) {
+                    throw new Error("Browser tidak mendukung kamera");
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(t => t.stop());
+
+            } catch (err) {
+                console.error("Camera init error:", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kamera Tidak Bisa Diakses',
+                    text: 'Pastikan Anda membuka halaman ini di tab biasa (bukan iframe) dan izinkan akses kamera.',
+                });
+                qrReader.innerHTML = `
+                    <div class="p-4 text-center text-white pt-20">
+                        <p class="mb-2">❌ Kamera tidak bisa digunakan</p>
+                        <p class="text-sm opacity-80">Buka aplikasi di tab baru</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            try {
+                html5QrcodeScanner = new Html5Qrcode("qr-reader");
+                const cameras = await Html5Qrcode.getCameras();
+
+                if (!cameras || cameras.length === 0) {
+                    throw new Error("Tidak ada kamera ditemukan");
+                }
+
+                const backCam = cameras.find(c => c.label.toLowerCase().includes("back")) || cameras[0];
+                await html5QrcodeScanner.start(backCam.id, config, onScanSuccess, onScanFailure);
+            } catch (err) {
+                console.error("Start scanner error:", err);
+                qrReader.innerHTML = `
+                    <div class="p-4 text-center text-white pt-20">
+                        Gagal mengaktifkan kamera<br>
+                        <span class="text-xs opacity-70">${err.message}</span>
+                    </div>
+                `;
+            }
         }
-
-        if (!navigator.mediaDevices?.getUserMedia) {
-            throw new Error("Browser tidak mendukung kamera");
-        }
-
-        // ⚠️ Hanya trigger permission check ringan
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach(t => t.stop());
-
-    } catch (err) {
-        console.error("Camera init error:", err);
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Kamera Tidak Bisa Diakses',
-            text: 'Aplikasi ini dibuka di dalam environment yang membatasi kamera (Google Apps Script iframe).',
-        });
-
-        qrReader.innerHTML = `
-            <div class="p-4 text-center text-white pt-20">
-                <p class="mb-2">❌ Kamera tidak bisa digunakan di mode ini</p>
-                <p class="text-sm opacity-80">Buka aplikasi di tab baru (Web App URL)</p>
-            </div>
-        `;
-        return;
-    }
-
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 }
-    };
-
-    try {
-        html5QrcodeScanner = new Html5Qrcode("qr-reader");
-
-        const cameras = await Html5Qrcode.getCameras();
-
-        if (!cameras || cameras.length === 0) {
-            throw new Error("Tidak ada kamera ditemukan");
-        }
-
-        // pilih kamera belakang jika ada
-        const backCam =
-            cameras.find(c => c.label.toLowerCase().includes("back")) ||
-            cameras[0];
-
-        await html5QrcodeScanner.start(
-            backCam.id,
-            config,
-            onScanSuccess,
-            onScanFailure
-        );
-
-    } catch (err) {
-        console.error("Start scanner error:", err);
-
-        qrReader.innerHTML = `
-            <div class="p-4 text-center text-white pt-20">
-                Gagal mengaktifkan kamera<br>
-                <span class="text-xs opacity-70">${err.message}</span>
-            </div>
-        `;
-    }
-}
 
         function stopScanner() {
             if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
                 html5QrcodeScanner.stop().then(() => {
                     html5QrcodeScanner.clear();
                     html5QrcodeScanner = null;
-                }).catch(err => { console.log(err) });
+                }).catch(err => console.log(err));
             }
         }
 
@@ -667,7 +621,6 @@
         }
 
         async function onScanSuccess(decodedText, decodedResult) {
-            // Prevent multiple rapid scans
             if(html5QrcodeScanner && html5QrcodeScanner.isScanning) {
                 html5QrcodeScanner.pause();
             }
@@ -681,7 +634,6 @@
                     scannedOdnerID = id;
                     scanState = 'SCAN_BOX';
                     
-                    // Update UI
                     document.getElementById('selected-odner-id').innerText = id;
                     document.getElementById('scan-state-ui').classList.remove('hidden');
                     
@@ -699,9 +651,8 @@
             } 
             else if (scanState === 'SCAN_BOX') {
                 if (type === 'BOX') {
-                    // Process assignment
                     const boxID = id;
-                    const res = await apiCall('assignOdnerToBox', scannedOdnerID, boxID);
+                    const res = await apiCall('assignOdnerToBox', { odnerID: scannedOdnerID, boxID: boxID });
                     
                     if (res.status === 'success') {
                         Swal.fire({
@@ -729,7 +680,7 @@
         }
 
         function onScanFailure(error) {
-            // Handle scan failure silently to not spam console
+            // Abaikan error agar tidak spam console
         }
 
         // ==========================================
@@ -744,11 +695,9 @@
             renderOdners(filtered);
         });
 
-        // Initialize App
         window.onload = () => {
             loadDashboard();
         };
-
     </script>
 </body>
 </html>
