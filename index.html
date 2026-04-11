@@ -219,7 +219,7 @@
         // ==========================================
         // KONFIGURASI PENTING: GANTI DENGAN URL DEPLOYMENT ANDA
         // ==========================================
-        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec'; 
+        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec'; // GANTI DENGAN URL WEB APP ANDA
         
 
         // ==========================================
@@ -252,37 +252,38 @@
         // API CALL (FETCH)
         // ==========================================
         async function apiCall(action, payload = {}) {
-            showLoader();
-            try {
-                let url = `${API_BASE_URL}?action=${encodeURIComponent(action)}`;
-                console.log('API Call:', url, payload);
+    showLoader();
+    try {
+        // Kirim action sebagai bagian dari payload
+        const requestBody = { action, ...payload };
+        
+        const response = await fetch(API_BASE_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                console.log('API Response:', result);
-                hideLoader();
-                return result;
-            } catch (error) {
-                hideLoader();
-                console.error('API Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Terhubung',
-                    text: error.message + '\n\nPastikan URL API benar dan aplikasi dibuka melalui http:// (bukan file://).',
-                });
-                return { status: 'error', message: error.message };
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
         }
+
+        const result = await response.json();
+        hideLoader();
+        return result;
+    } catch (error) {
+        hideLoader();
+        console.error('API Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Terhubung',
+            text: error.message,
+        });
+        return { status: 'error', message: error.message };
+    }
+}
+
+
 
         // ==========================================
         // UI NAVIGATION
