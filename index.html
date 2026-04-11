@@ -255,21 +255,31 @@
             showLoader();
             try {
                 let url = `${API_BASE_URL}?action=${encodeURIComponent(action)}`;
-                
-                let options = {
+                console.log('API Call:', url, payload);
+
+                const response = await fetch(url, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
-                };
-                
-                const response = await fetch(url, options);
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
+                console.log('API Response:', result);
                 hideLoader();
                 return result;
             } catch (error) {
                 hideLoader();
                 console.error('API Error:', error);
-                Swal.fire('Error', 'Gagal terhubung ke server. Periksa koneksi atau URL API.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Terhubung',
+                    text: error.message + '\n\nPastikan URL API benar dan aplikasi dibuka melalui http:// (bukan file://).',
+                });
                 return { status: 'error', message: error.message };
             }
         }
