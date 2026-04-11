@@ -262,51 +262,32 @@
             ]
         };
 
-        const apiCall = (functionName, ...args) => {
-            return new Promise((resolve, reject) => {
-                showLoader();
-                // Check if running inside Google Apps Script
-                if (typeof google !== 'undefined' && google.script && google.script.run) {
-                    google.script.run
-                        .withSuccessHandler(res => { hideLoader(); resolve(res); })
-                        .withFailureHandler(err => { hideLoader(); reject(err); })
-                        [functionName](...args);
-                } else {
-                    // MOCK ENVIRONMENT FOR PREVIEW
-                    console.log(`[MOCK] Calling ${functionName}`, args);
-                    setTimeout(() => {
-                        hideLoader();
-                        let res = { status: 'error', message: 'Mock Error' };
-                        
-                        if (functionName === 'getDashboardData') {
-                            res = { status: 'success', data: { totalOdner: MOCK_DATA.odner.length, totalBox: MOCK_DATA.box.length, tersimpan: MOCK_DATA.odner.filter(o=>o.Status==='Tersimpan').length, belumDisimpan: MOCK_DATA.odner.filter(o=>o.Status==='Belum Disimpan').length } };
-                        } else if (functionName === 'getAllOdners') {
-                            res = { status: 'success', data: MOCK_DATA.odner };
-                        } else if (functionName === 'getAllBoxes') {
-                            res = { status: 'success', data: MOCK_DATA.box };
-                        } else if (functionName === 'createOdner') {
-                            const newId = `OD-20240101-00${MOCK_DATA.odner.length + 1}`;
-                            MOCK_DATA.odner.push({ OdnerID: newId, NamaOdner: args[0].namaOdner, Deskripsi: args[0].deskripsi, BoxID: '', Status: 'Belum Disimpan', Timestamp: new Date().toISOString() });
-                            res = { status: 'success', data: newId, message: 'Mock Odner Added' };
-                        } else if (functionName === 'createBox') {
-                            const newId = `BX-20240101-00${MOCK_DATA.box.length + 1}`;
-                            MOCK_DATA.box.push({ BoxID: newId, NamaBox: args[0].namaBox, Lokasi: args[0].lokasi, Kapasitas: args[0].kapasitas, Timestamp: new Date().toISOString() });
-                            res = { status: 'success', data: newId, message: 'Mock Box Added' };
-                        } else if (functionName === 'assignOdnerToBox') {
-                            const od = MOCK_DATA.odner.find(o => o.OdnerID === args[0]);
-                            const bx = MOCK_DATA.box.find(b => b.BoxID === args[1]);
-                            if(od && bx) {
-                                od.BoxID = args[1]; od.Status = 'Tersimpan';
-                                res = { status: 'success', message: `Mock: ${args[0]} disimpan ke ${args[1]}` };
-                            } else {
-                                res = { status: 'error', message: 'ID tidak valid' };
-                            }
-                        }
-                        resolve(res);
-                    }, 500); // simulate network delay
-                }
-            });
-        };
+            const API_URL = "https://script.google.com/macros/s/AKfycby_9aJqfozUa3KfMYKqe9pL9xoaYwici7dbv5UeY1Tthn7S_mhFXPQ2xvjyh1AsOXtp/exec";
+
+            const apiCall = async (action, payload = {}) => {
+              showLoader();
+            
+              try {
+                const res = await fetch(API_URL, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    action,
+                    ...payload
+                  })
+                });
+            
+                const data = await res.json();
+                hideLoader();
+                return data;
+            
+              } catch (err) {
+                hideLoader();
+                return { success: false, message: err.message };
+              }
+            };
 
         // ==========================================
         // UI NAVIGATION & INITIALIZATION
