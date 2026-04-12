@@ -40,40 +40,34 @@
 </head>
 <body class="text-gray-800 antialiased h-screen flex flex-col">
 
-    <!-- Overlay Login -->
-<div id="login-overlay" class="fixed inset-0 bg-white z-[200] flex flex-col">
-    <div class="flex-1 flex flex-col justify-center items-center p-6">
-        <div class="w-full max-w-sm">
-            <div class="text-center mb-8">
-                <div class="bg-blue-600 text-white w-20 h-20 rounded-2xl flex justify-center items-center mx-auto mb-4 shadow-lg">
-                    <i class="fa-solid fa-box-archive text-4xl"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-800">INCOSYS</h1>
-                <p class="text-gray-500 text-sm mt-1">Inventory Control System</p>
+<!-- Login Screen -->
+<div id="login-screen" class="fixed inset-0 bg-gray-100 z-50 flex justify-center items-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
+        <div class="text-center mb-6">
+            <div class="bg-blue-600 text-white p-4 rounded-2xl inline-block mb-3">
+                <i class="fa-solid fa-box-archive text-3xl"></i>
             </div>
-            
-            <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                    <input type="text" id="login-username" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="login-password" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold shadow-md hover:bg-blue-700 transition">
-                    <i class="fa-solid fa-right-to-bracket mr-2"></i>Masuk
-                </button>
-            </form>
-            
-            <div class="mt-4 text-center">
-                <button onclick="showChangePasswordModal()" class="text-sm text-blue-600 hover:underline">
-                    <i class="fa-solid fa-key mr-1"></i>Ganti Password
-                </button>
-            </div>
-            
-            <p id="login-error" class="text-red-500 text-sm text-center mt-4 hidden"></p>
+            <h2 class="text-xl font-bold text-gray-800">INCOSYS</h2>
+            <p class="text-gray-500 text-sm">Inventory Control System</p>
         </div>
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input type="text" id="login-username" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="login-password" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium shadow-md">
+                Login
+            </button>
+        </form>
+        <p class="text-center mt-4">
+            <button onclick="showChangePasswordModal()" class="text-blue-600 text-sm">Ganti Password</button>
+        </p>
     </div>
     <div class="text-center text-gray-400 text-xs py-4 border-t">
         © 2024 INCOSYS. All rights reserved.
@@ -81,8 +75,9 @@
 </div>
 
 
+
 <!-- Aplikasi Utama (hidden sebelum login) -->
-<div id="app-content" class="hidden">
+<div id="app-container" class="hidden">
                     
         <!-- Top Header (sama) -->
             <header class="glass-header fixed top-0 w-full z-40 border-b border-gray-200 shadow-sm px-4 py-3 flex justify-between items-center bg-white/80 backdrop-blur-md">
@@ -308,119 +303,150 @@
 
 
 <script>
-        // ========== SESSION & AUTH ==========
-        let currentUser = null;
+    // ========== AUTH STATE ==========
+let authToken = localStorage.getItem('authToken');
+let currentUser = localStorage.getItem('currentUser');
 
-        // Cek session saat halaman dimuat
-        async function checkSession() {
-            try {
-                const res = await apiCall('checkSession');
-                if (res.status === 'success' && res.username) {
-                    currentUser = res.username;
-                    showApp();
-                } else {
-                    showLogin();
-                }
-            } catch (e) {
-                showLogin();
-            }
+    // API Call (menggunakan URLSearchParams)
+    async function apiCall(action, payload = {}, showloader = true) {
+        if(showloader){
+            showLoader();
+        }
+        try {
+            const body = new URLSearchParams();
+
+            body.append("action", action);
+
+                
+            // Tambahkan user agent untuk logging
+            body.append("userAgent", navigator.userAgent);
+
+
+              // Tambahkan token jika ada
+        if (authToken) {
+            body.append("authorization", "Bearer " + authToken);
         }
 
-        function showLogin() {
-            document.getElementById('login-overlay').classList.remove('hidden');
-            document.getElementById('app-content').classList.add('hidden');
-        }
-
-        function showApp() {
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            // Load data awal
-            loadDashboard();
-        }
-
-        async function handleLoginSubmit(e) {
-            e.preventDefault();
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
-            const errorEl = document.getElementById('login-error');
-            
-            if (!username || !password) {
-                errorEl.innerText = 'Username dan password harus diisi';
-                errorEl.classList.remove('hidden');
-                return;
-            }
-            
-            // Dapatkan user agent untuk logging
-            const userAgent = navigator.userAgent;
-            
-            const res = await apiCall('login', { username, password, userAgent });
-            if (res.status === 'success') {
-                currentUser = username;
-                showApp();
-                Toast.fire({ icon: 'success', title: `Selamat datang, ${username}` });
-            } else {
-                errorEl.innerText = res.message;
-                errorEl.classList.remove('hidden');
-            }
-        }
-
-        async function logout() {
-            await apiCall('logout');
-            currentUser = null;
-            showLogin();
-            document.getElementById('login-form').reset();
-        }
-
-        // Ganti password modal
-        async function showChangePasswordModal() {
-            // Hanya bisa diakses jika belum login? Atau tetap bisa?
-            // Sebaiknya hanya setelah login, tapi bisa juga dari form login.
-            // Kita buat agar meminta username jika belum login, atau otomatis pakai currentUser jika sudah login.
-            const usernamePrompt = currentUser ? currentUser : '';
-            
-            const { value: formValues } = await Swal.fire({
-                title: 'Ganti Password',
-                html:
-                    `<input id="swal-username" class="swal2-input" placeholder="Username" value="${usernamePrompt}" ${currentUser ? 'readonly' : ''}>` +
-                    `<input id="swal-oldpass" type="password" class="swal2-input" placeholder="Password Lama">` +
-                    `<input id="swal-newpass" type="password" class="swal2-input" placeholder="Password Baru">`,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'Ganti',
-                preConfirm: () => {
-                    const username = document.getElementById('swal-username').value;
-                    const oldPass = document.getElementById('swal-oldpass').value;
-                    const newPass = document.getElementById('swal-newpass').value;
-                    if (!username || !oldPass || !newPass) {
-                        Swal.showValidationMessage('Semua field harus diisi');
-                        return false;
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    if (Array.isArray(value)) {
+                        body.append(key, JSON.stringify(value));
+                    } else {
+                        body.append(key, value);
                     }
-                    return { username, oldPassword: oldPass, newPassword: newPass };
                 }
             });
+
+
+
+            const response = await fetch(API_BASE_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body
+            });
+
             
-            if (formValues) {
-                const res = await apiCall('changePassword', formValues);
+        const result = await response.json();
+        
+        // Jika unauthorized, redirect ke login
+        if (result.status === 'error' && result.message.includes('Unauthorized')) {
+            logout();
+            return result;
+        }
+        
+        return result;
+
+
+        } catch (error) {
+            return { status: "error", message: error.message };
+        } finally {
+            hideLoader();
+        }
+    }
+
+
+
+    
+        // Login
+            async function handleLogin(e) {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                const res = await apiCall('login', { username, password });
                 if (res.status === 'success') {
-                    Swal.fire('Sukses', res.message, 'success');
+                    authToken = res.token;
+                    currentUser = res.username;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', currentUser);
+                    
+                    // Tampilkan aplikasi
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    
+                    // Load data awal
+                    loadDashboard();
+                    
+                    Toast.fire({ icon: 'success', title: 'Login berhasil' });
                 } else {
-                    Swal.fire('Gagal', res.message, 'error');
+                    Swal.fire('Login Gagal', res.message, 'error');
                 }
             }
-        }
 
-    // Override window.onload untuk cek session dulu
-    const originalOnload = window.onload;
-    window.onload = function() {
-        checkSession();
-        if (originalOnload) originalOnload();
-    };
+            // Logout
+            function logout() {
+                apiCall('logout');
+                authToken = null;
+                currentUser = null;
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
 
-// Tambahkan tombol logout di header (opsional)
-// Di header, tambahkan:
-// <button onclick="logout()" class="text-gray-500 hover:text-red-500"><i class="fa-solid fa-sign-out-alt"></i></button>
 
-
+            // Ganti Password Modal
+            async function showChangePasswordModal() {
+                // Hanya bisa diakses jika sudah login
+                if (!authToken) {
+                    Swal.fire('Error', 'Anda harus login terlebih dahulu', 'error');
+                    return;
+                }
+                
+                const { value: formValues } = await Swal.fire({
+                    title: 'Ganti Password',
+                    html:
+                        `<input id="swal-old" type="password" class="swal2-input" placeholder="Password Lama">` +
+                        `<input id="swal-new1" type="password" class="swal2-input" placeholder="Password Baru">` +
+                        `<input id="swal-new2" type="password" class="swal2-input" placeholder="Konfirmasi Password Baru">`,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    preConfirm: () => {
+                        const oldPass = document.getElementById('swal-old').value;
+                        const newPass1 = document.getElementById('swal-new1').value;
+                        const newPass2 = document.getElementById('swal-new2').value;
+                        if (!oldPass || !newPass1 || !newPass2) {
+                            Swal.showValidationMessage('Semua field harus diisi');
+                            return false;
+                        }
+                        if (newPass1 !== newPass2) {
+                            Swal.showValidationMessage('Konfirmasi password baru tidak cocok');
+                            return false;
+                        }
+                        return { oldPassword: oldPass, newPassword: newPass1 };
+                    }
+                });
+                
+                if (formValues) {
+                    const res = await apiCall('changePassword', formValues);
+                    if (res.status === 'success') {
+                        Swal.fire('Sukses', res.message, 'success');
+                    } else {
+                        Swal.fire('Gagal', res.message, 'error');
+                    }
+                }
+            }
 
 
 
@@ -428,6 +454,7 @@
 
     // ========== KONFIGURASI ==========
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec';
+    const API_BASE_URLC = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec?action=logout';
 
     // ========== STATE ==========
     let odnerData = [];
@@ -446,35 +473,7 @@
     const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
 
     
-    // API Call (menggunakan URLSearchParams)
-    async function apiCall(action, payload = {}, showloader = true) {
-        if(showloader){
-            showLoader();
-        }
-        try {
-            const body = new URLSearchParams();
-            body.append("action", action);
-            Object.entries(payload).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== "") {
-                    if (Array.isArray(value)) {
-                        body.append(key, JSON.stringify(value));
-                    } else {
-                        body.append(key, value);
-                    }
-                }
-            });
-            const response = await fetch(API_BASE_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body
-            });
-            return await response.json();
-        } catch (error) {
-            return { status: "error", message: error.message };
-        } finally {
-            hideLoader();
-        }
-    }
+
 
     // ========== NAVIGASI ==========
     function switchView(viewName) {
@@ -1047,21 +1046,30 @@
 
 
 
+        
+            window.onload = () => {
+                if (authToken) {
+                    // Verifikasi token ke server? Bisa dengan memanggil endpoint yang ringan.
+                    // Untuk sederhana, langsung tampilkan app.
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    loadDashboard();
 
-            // ========== INISIALISASI ==========
-        window.onload = () => {
-            loadDashboard();
-            // tutup modal dengan klik luar
-            document.getElementById('box-odner-modal').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('box-odner-modal')) closeBoxOdnerModal();
-            });
+                    // tutup modal dengan klik luar
+                    document.getElementById('box-odner-modal').addEventListener('click', (e) => {
+                        if (e.target === document.getElementById('box-odner-modal')) closeBoxOdnerModal();
+                    });
 
-             document.getElementById('qr-modal').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('qr-modal')) closeQRModal();
-            });
+                    document.getElementById('qr-modal').addEventListener('click', (e) => {
+                        if (e.target === document.getElementById('qr-modal')) closeQRModal();
+                    });
+                    
+                } else {
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    document.getElementById('app-container').classList.add('hidden');
+                }
+            };
 
-
-        };
 
 </script>
 </body>
