@@ -40,218 +40,392 @@
 </head>
 <body class="text-gray-800 antialiased h-screen flex flex-col">
 
-<!-- Top Header (sama) -->
-<header class="glass-header fixed top-0 w-full z-40 border-b border-gray-200 shadow-sm px-4 py-3 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-        <div class="bg-blue-600 text-white p-2 rounded-lg"><i class="fa-solid fa-box-archive"></i></div>
-        <h1 class="text-lg font-bold text-gray-800">INCOSYS | Inventory Control System</h1>
-    </div>
-</header>
-
-<!-- Main Content -->
-<main class="mt-16 p-4 flex-grow overflow-y-auto">
-
-        <!-- View Dashboard -->
-        <section id="view-dashboard" class="view-section active">
-            <h2 class="text-xl font-bold mb-4">Dashboard</h2>
+    <!-- Overlay Login -->
+<div id="login-overlay" class="fixed inset-0 bg-white z-[200] flex flex-col">
+    <div class="flex-1 flex flex-col justify-center items-center p-6">
+        <div class="w-full max-w-sm">
+            <div class="text-center mb-8">
+                <div class="bg-blue-600 text-white w-20 h-20 rounded-2xl flex justify-center items-center mx-auto mb-4 shadow-lg">
+                    <i class="fa-solid fa-box-archive text-4xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">INCOSYS</h1>
+                <p class="text-gray-500 text-sm mt-1">Inventory Control System</p>
+            </div>
             
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center">
-                    <i class="fa-regular fa-folder-open text-blue-500 text-2xl mb-2"></i>
-                    <span class="text-gray-500 text-sm">Total Odner</span>
-                    <span id="dash-total-odner" class="text-2xl font-bold text-gray-800">-</span>
+            <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="login-username" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center">
-                    <i class="fa-solid fa-boxes-stacked text-indigo-500 text-2xl mb-2"></i>
-                    <span class="text-gray-500 text-sm">Total Box</span>
-                    <span id="dash-total-box" class="text-2xl font-bold text-gray-800">-</span>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold shadow-md hover:bg-blue-700 transition">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i>Masuk
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <button onclick="showChangePasswordModal()" class="text-sm text-blue-600 hover:underline">
+                    <i class="fa-solid fa-key mr-1"></i>Ganti Password
+                </button>
+            </div>
+            
+            <p id="login-error" class="text-red-500 text-sm text-center mt-4 hidden"></p>
+        </div>
+    </div>
+    <div class="text-center text-gray-400 text-xs py-4 border-t">
+        © 2024 INCOSYS. All rights reserved.
+    </div>
+</div>
+
+
+<!-- Aplikasi Utama (hidden sebelum login) -->
+<div id="app-content" class="hidden">
+                    
+        <!-- Top Header (sama) -->
+            <header class="glass-header fixed top-0 w-full z-40 border-b border-gray-200 shadow-sm px-4 py-3 flex justify-between items-center bg-white/80 backdrop-blur-md">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <h1 class="text-lg font-bold text-gray-800 tracking-tight">
+                    INCOSYS <span class="hidden sm:inline text-gray-400 font-normal">| Inventory Control System</span>
+                </h1>
             </div>
 
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-                <h3 class="font-semibold text-gray-700 mb-3">Status Penyimpanan</h3>
+            <button onclick="logout()" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
+                <span>Logout</span>
+                <i class="fa-solid fa-sign-out-alt"></i>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="mt-16 p-4 flex-grow overflow-y-auto">
+
+                <!-- View Dashboard -->
+                <section id="view-dashboard" class="view-section active">
+                    <h2 class="text-xl font-bold mb-4">Dashboard</h2>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                            <i class="fa-regular fa-folder-open text-blue-500 text-2xl mb-2"></i>
+                            <span class="text-gray-500 text-sm">Total Odner</span>
+                            <span id="dash-total-odner" class="text-2xl font-bold text-gray-800">-</span>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                            <i class="fa-solid fa-boxes-stacked text-indigo-500 text-2xl mb-2"></i>
+                            <span class="text-gray-500 text-sm">Total Box</span>
+                            <span id="dash-total-box" class="text-2xl font-bold text-gray-800">-</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
+                        <h3 class="font-semibold text-gray-700 mb-3">Status Penyimpanan</h3>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600"><i class="fa-solid fa-check-circle text-green-500 mr-1"></i> Tersimpan</span>
+                            <span id="dash-tersimpan" class="font-bold">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600"><i class="fa-solid fa-clock text-orange-500 mr-1"></i> Belum Disimpan</span>
+                            <span id="dash-belum" class="font-bold">-</span>
+                        </div>
+                    </div>
+
+                    <h3 class="font-semibold text-gray-700 mb-3">Aksi Cepat</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="showAddOdnerModal()" class="bg-blue-50 text-blue-600 py-3 rounded-xl font-medium border border-blue-100 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Odner Baru
+                        </button>
+                        <button onclick="switchView('scanner')" class="bg-indigo-50 text-indigo-600 py-3 rounded-xl font-medium border border-indigo-100 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-qrcode"></i> Scan QR
+                        </button>
+                    </div>
+                </section>
+
+                <!-- View Odner -->
+                <section id="view-odner" class="view-section hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Daftar Odner</h2>
+                        <button onclick="showAddOdnerModal()" class="bg-blue-600 text-white w-8 h-8 rounded-full shadow-md flex justify-center items-center">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="relative mb-4">
+                        <input type="text" id="search-odner" placeholder="Cari ID atau nama odner..." class="w-full bg-white border border-gray-200 rounded-xl py-2 px-10 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+
+                    <div id="odner-list" class="space-y-3 pb-4"></div>
+                </section>
+
+
+
+
+            <!-- View Box -->
+            <section id="view-box" class="view-section hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Daftar Box</h2>
+                    <button onclick="showAddBoxModal()" class="bg-indigo-600 text-white w-8 h-8 rounded-full shadow-md flex justify-center items-center">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div id="box-list" class="space-y-3 pb-4"></div>
+            </section>
+
+            <section id="view-scanner" class="view-section hidden flex flex-col h-full">
+            <h2 class="text-xl font-bold mb-2 text-center">Scanner Batch</h2>
+            
+            <div id="scan-instructions" class="bg-blue-50 text-blue-700 text-sm p-3 rounded-xl mb-4 text-center border border-blue-100">
+                Scan QR <b>Odner</b> satu per satu. Klik "Selesai" jika sudah semua.
+            </div>
+
+            <div id="scanned-odner-list" class="mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100 hidden">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="text-sm text-gray-600"><i class="fa-solid fa-check-circle text-green-500 mr-1"></i> Tersimpan</span>
-                    <span id="dash-tersimpan" class="font-bold">-</span>
+                    <h3 class="font-semibold text-gray-700">Odner Terscan (<span id="scan-count">0</span>)</h3>
+                    <button onclick="clearScannedOdners()" class="text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded transition">
+                        <i class="fa-regular fa-trash-can"></i> Bersihkan
+                    </button>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600"><i class="fa-solid fa-clock text-orange-500 mr-1"></i> Belum Disimpan</span>
-                    <span id="dash-belum" class="font-bold">-</span>
+                <div id="scanned-chips" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="bg-black rounded-2xl overflow-hidden shadow-lg relative flex-grow max-h-[350px] flex items-center justify-center w-full">
+                <div id="qr-reader" class="w-full"></div>
+            </div>
+
+            <div class="mt-4 flex gap-3">
+                <button onclick="resetScanner()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition">
+                    Reset
+                </button>
+                <button id="btn-finish-scan" onclick="finishScanAndSelectBox()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Selesai & Pilih Box
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 text-center mt-2">Total odner siap disimpan: <span id="footer-scan-count">0</span></p>
+        </section>
+        </main>
+
+            <!-- Bottom Navigation -->
+            <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center pb-safe pt-2 pb-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
+                <div onclick="switchView('dashboard')" class="nav-item active relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors" data-target="view-dashboard">
+                    <i class="fa-solid fa-house text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Home</span>
+                </div>
+                <div onclick="switchView('odner')" class="nav-item relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors" data-target="view-odner">
+                    <i class="fa-regular fa-folder text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Odner</span>
+                </div>
+                
+                <div onclick="switchView('scanner')" class="relative -top-5 flex flex-col items-center justify-center cursor-pointer">
+                    <div class="bg-blue-600 text-white w-14 h-14 rounded-full flex justify-center items-center shadow-lg border-4 border-gray-50 transform transition hover:scale-105" data-target="view-scanner">
+                        <i class="fa-solid fa-qrcode text-2xl"></i>
+                    </div>
+                </div>
+
+                <div onclick="switchView('box')" class="nav-item relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors" data-target="view-box">
+                    <i class="fa-solid fa-box text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Box</span>
+                </div>
+                <div onclick="openPrintModal()" class="nav-item relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors">
+                    <i class="fa-solid fa-print text-xl mb-1"></i>
+                    <span class="text-[10px] font-medium">Cetak QR</span>
+                </div>
+            </nav>
+
+            <!-- Modal QR -->
+            <div id="qr-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
+                <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative">
+                    <button onclick="closeQRModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                    <h3 class="text-lg font-bold mb-4 text-center">QR Code</h3>
+                    <div id="qrcode-container" class="flex justify-center mb-4 p-4 bg-white rounded-xl"></div>
+                    <p id="qr-id-text" class="text-center font-mono font-bold text-lg mb-1"></p>
+                    <p id="qr-name-text" class="text-center text-sm text-gray-500 mb-4"></p>
+                    <button onclick="closeQRModal()" class="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium">Tutup</button>
                 </div>
             </div>
 
-            <h3 class="font-semibold text-gray-700 mb-3">Aksi Cepat</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="showAddOdnerModal()" class="bg-blue-50 text-blue-600 py-3 rounded-xl font-medium border border-blue-100 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Odner Baru
-                </button>
-                <button onclick="switchView('scanner')" class="bg-indigo-50 text-indigo-600 py-3 rounded-xl font-medium border border-indigo-100 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-qrcode"></i> Scan QR
-                </button>
-            </div>
-        </section>
-
-        <!-- View Odner -->
-        <section id="view-odner" class="view-section hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold">Daftar Odner</h2>
-                <button onclick="showAddOdnerModal()" class="bg-blue-600 text-white w-8 h-8 rounded-full shadow-md flex justify-center items-center">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>
-            
-            <div class="relative mb-4">
-                <input type="text" id="search-odner" placeholder="Cari ID atau nama odner..." class="w-full bg-white border border-gray-200 rounded-xl py-2 px-10 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm">
-                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+            <!-- Modal Cetak Semua -->
+            <div id="print-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
+                <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative">
+                    <button onclick="closePrintModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                    <h3 class="text-lg font-bold mb-4 text-center">Cetak Semua QR Code</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6">Pilih data yang ingin dicetak massal.</p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="printAll('odner')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md">
+                            <i class="fa-solid fa-folder"></i> Cetak Semua QR Odner
+                        </button>
+                        <button onclick="printAll('box')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md">
+                            <i class="fa-solid fa-box"></i> Cetak Semua QR Box
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div id="odner-list" class="space-y-3 pb-4"></div>
-        </section>
 
-
-
-
-    <!-- View Box -->
-    <section id="view-box" class="view-section hidden">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">Daftar Box</h2>
-            <button onclick="showAddBoxModal()" class="bg-indigo-600 text-white w-8 h-8 rounded-full shadow-md flex justify-center items-center">
-                <i class="fa-solid fa-plus"></i>
-            </button>
-        </div>
-        <div id="box-list" class="space-y-3 pb-4"></div>
-    </section>
-
-    <section id="view-scanner" class="view-section hidden flex flex-col h-full">
-    <h2 class="text-xl font-bold mb-2 text-center">Scanner Batch</h2>
-    
-    <div id="scan-instructions" class="bg-blue-50 text-blue-700 text-sm p-3 rounded-xl mb-4 text-center border border-blue-100">
-        Scan QR <b>Odner</b> satu per satu. Klik "Selesai" jika sudah semua.
-    </div>
-
-    <div id="scanned-odner-list" class="mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100 hidden">
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="font-semibold text-gray-700">Odner Terscan (<span id="scan-count">0</span>)</h3>
-            <button onclick="clearScannedOdners()" class="text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded transition">
-                <i class="fa-regular fa-trash-can"></i> Bersihkan
-            </button>
-        </div>
-        <div id="scanned-chips" class="flex flex-wrap gap-2"></div>
-    </div>
-
-    <div class="bg-black rounded-2xl overflow-hidden shadow-lg relative flex-grow max-h-[350px] flex items-center justify-center w-full">
-        <div id="qr-reader" class="w-full"></div>
-    </div>
-
-    <div class="mt-4 flex gap-3">
-        <button onclick="resetScanner()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition">
-            Reset
-        </button>
-        <button id="btn-finish-scan" onclick="finishScanAndSelectBox()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-            Selesai & Pilih Box
-        </button>
-    </div>
-    <p class="text-xs text-gray-500 text-center mt-2">Total odner siap disimpan: <span id="footer-scan-count">0</span></p>
-</section>
-</main>
-
-    <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center pb-safe pt-2 pb-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
-        <div onclick="switchView('dashboard')" class="nav-item active relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors" data-target="view-dashboard">
-            <i class="fa-solid fa-house text-xl mb-1"></i>
-            <span class="text-[10px] font-medium">Home</span>
-        </div>
-        <div onclick="switchView('odner')" class="nav-item relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors" data-target="view-odner">
-            <i class="fa-regular fa-folder text-xl mb-1"></i>
-            <span class="text-[10px] font-medium">Odner</span>
-        </div>
-        
-        <div onclick="switchView('scanner')" class="relative -top-5 flex flex-col items-center justify-center cursor-pointer">
-            <div class="bg-blue-600 text-white w-14 h-14 rounded-full flex justify-center items-center shadow-lg border-4 border-gray-50 transform transition hover:scale-105" data-target="view-scanner">
-                <i class="fa-solid fa-qrcode text-2xl"></i>
+        <!-- Modal Lihat Odner dalam Box -->
+        <div id="box-odner-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-lg">Isi Box: <span id="modal-box-name">-</span></h3>
+                    <button onclick="closeBoxOdnerModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4 overflow-y-auto flex-grow" id="modal-odner-list">
+                    <p class="text-gray-500 text-center">memuat...</p>
+                </div>
+                <div class="p-4 border-t">
+                    <button onclick="closeBoxOdnerModal()" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl">Tutup</button>
+                </div>
             </div>
         </div>
 
-        <div onclick="switchView('box')" class="nav-item relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors" data-target="view-box">
-            <i class="fa-solid fa-box text-xl mb-1"></i>
-            <span class="text-[10px] font-medium">Box</span>
-        </div>
-        <div onclick="openPrintModal()" class="nav-item relative flex flex-col items-center justify-center w-16 h-12 text-gray-400 cursor-pointer transition-colors">
-            <i class="fa-solid fa-print text-xl mb-1"></i>
-            <span class="text-[10px] font-medium">Cetak QR</span>
-        </div>
-    </nav>
+        <!-- Print Area -->
+        <div id="print-area" class="hidden"></div>
 
-    <!-- Modal QR -->
-    <div id="qr-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative">
-            <button onclick="closeQRModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fa-solid fa-times text-xl"></i>
-            </button>
-            <h3 class="text-lg font-bold mb-4 text-center">QR Code</h3>
-            <div id="qrcode-container" class="flex justify-center mb-4 p-4 bg-white rounded-xl"></div>
-            <p id="qr-id-text" class="text-center font-mono font-bold text-lg mb-1"></p>
-            <p id="qr-name-text" class="text-center text-sm text-gray-500 mb-4"></p>
-            <button onclick="closeQRModal()" class="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium">Tutup</button>
-        </div>
-    </div>
-
-    <!-- Modal Cetak Semua -->
-    <div id="print-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl relative">
-            <button onclick="closePrintModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fa-solid fa-times text-xl"></i>
-            </button>
-            <h3 class="text-lg font-bold mb-4 text-center">Cetak Semua QR Code</h3>
-            <p class="text-sm text-gray-500 text-center mb-6">Pilih data yang ingin dicetak massal.</p>
-            
-            <div class="space-y-3">
-                <button onclick="printAll('odner')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md">
-                    <i class="fa-solid fa-folder"></i> Cetak Semua QR Odner
-                </button>
-                <button onclick="printAll('box')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md">
-                    <i class="fa-solid fa-box"></i> Cetak Semua QR Box
-                </button>
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] hidden flex justify-center items-center">
+                <div class="bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 border border-white/40">
+                <div class="relative">
+                    <div class="loader w-14 h-14 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex justify-center items-center">
+                        <i class="fa-solid fa-box-archive text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+                <!-- <p class="text-gray-700 font-medium tracking-wide">Memproses...</p> -->
             </div>
         </div>
-    </div>
 
-
-<!-- Modal Lihat Odner dalam Box -->
-<div id="box-odner-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-center p-4 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl">
-        <div class="p-4 border-b flex justify-between items-center">
-            <h3 class="font-bold text-lg">Isi Box: <span id="modal-box-name">-</span></h3>
-            <button onclick="closeBoxOdnerModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fa-solid fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="p-4 overflow-y-auto flex-grow" id="modal-odner-list">
-            <p class="text-gray-500 text-center">memuat...</p>
-        </div>
-        <div class="p-4 border-t">
-            <button onclick="closeBoxOdnerModal()" class="w-full bg-gray-100 text-gray-700 py-2 rounded-xl">Tutup</button>
-        </div>
-    </div>
 </div>
 
-<!-- Print Area -->
-<div id="print-area" class="hidden"></div>
-
-<!-- Loading Overlay -->
-<div id="loading-overlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] hidden flex justify-center items-center">
-        <div class="bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 border border-white/40">
-        <div class="relative">
-            <div class="loader w-14 h-14 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <div class="absolute inset-0 flex justify-center items-center">
-                <i class="fa-solid fa-box-archive text-blue-600 text-xl"></i>
-            </div>
-        </div>
-        <!-- <p class="text-gray-700 font-medium tracking-wide">Memproses...</p> -->
-    </div>
-</div>
 
 <script>
+        // ========== SESSION & AUTH ==========
+        let currentUser = null;
+
+        // Cek session saat halaman dimuat
+        async function checkSession() {
+            try {
+                const res = await apiCall('checkSession');
+                if (res.status === 'success' && res.username) {
+                    currentUser = res.username;
+                    showApp();
+                } else {
+                    showLogin();
+                }
+            } catch (e) {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-overlay').classList.remove('hidden');
+            document.getElementById('app-content').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+            // Load data awal
+            loadDashboard();
+        }
+
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (!username || !password) {
+                errorEl.innerText = 'Username dan password harus diisi';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            
+            // Dapatkan user agent untuk logging
+            const userAgent = navigator.userAgent;
+            
+            const res = await apiCall('login', { username, password, userAgent });
+            if (res.status === 'success') {
+                currentUser = username;
+                showApp();
+                Toast.fire({ icon: 'success', title: `Selamat datang, ${username}` });
+            } else {
+                errorEl.innerText = res.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        async function logout() {
+            await apiCall('logout');
+            currentUser = null;
+            showLogin();
+            document.getElementById('login-form').reset();
+        }
+
+        // Ganti password modal
+        async function showChangePasswordModal() {
+            // Hanya bisa diakses jika belum login? Atau tetap bisa?
+            // Sebaiknya hanya setelah login, tapi bisa juga dari form login.
+            // Kita buat agar meminta username jika belum login, atau otomatis pakai currentUser jika sudah login.
+            const usernamePrompt = currentUser ? currentUser : '';
+            
+            const { value: formValues } = await Swal.fire({
+                title: 'Ganti Password',
+                html:
+                    `<input id="swal-username" class="swal2-input" placeholder="Username" value="${usernamePrompt}" ${currentUser ? 'readonly' : ''}>` +
+                    `<input id="swal-oldpass" type="password" class="swal2-input" placeholder="Password Lama">` +
+                    `<input id="swal-newpass" type="password" class="swal2-input" placeholder="Password Baru">`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Ganti',
+                preConfirm: () => {
+                    const username = document.getElementById('swal-username').value;
+                    const oldPass = document.getElementById('swal-oldpass').value;
+                    const newPass = document.getElementById('swal-newpass').value;
+                    if (!username || !oldPass || !newPass) {
+                        Swal.showValidationMessage('Semua field harus diisi');
+                        return false;
+                    }
+                    return { username, oldPassword: oldPass, newPassword: newPass };
+                }
+            });
+            
+            if (formValues) {
+                const res = await apiCall('changePassword', formValues);
+                if (res.status === 'success') {
+                    Swal.fire('Sukses', res.message, 'success');
+                } else {
+                    Swal.fire('Gagal', res.message, 'error');
+                }
+            }
+        }
+
+    // Override window.onload untuk cek session dulu
+    const originalOnload = window.onload;
+    window.onload = function() {
+        checkSession();
+        if (originalOnload) originalOnload();
+    };
+
+// Tambahkan tombol logout di header (opsional)
+// Di header, tambahkan:
+// <button onclick="logout()" class="text-gray-500 hover:text-red-500"><i class="fa-solid fa-sign-out-alt"></i></button>
+
+
+
+
+
+
+
     // ========== KONFIGURASI ==========
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec';
 
