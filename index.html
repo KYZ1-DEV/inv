@@ -50,21 +50,32 @@
             <h2 class="text-xl font-bold text-gray-800">INCOSYS</h2>
             <p class="text-gray-500 text-sm">Inventory Control System</p>
         </div>
-        <form id="login-form" onsubmit="handleLogin(event)">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input type="text" id="login-username" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" id="login-password" required 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium shadow-md">
-                Login
-            </button>
-        </form>
+       <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="login-username" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-shadow">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition-shadow">
+                </div>
+                
+                <button type="submit" id="login-btn" 
+                        class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium shadow-md flex justify-center items-center gap-2 transition-all duration-300 hover:bg-blue-700">
+                    <span id="btn-text">Login</span>
+                    
+                    <svg id="btn-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+
+
+
+
         <p class="text-center mt-4">
             <button onclick="showChangePasswordModal()" class="text-blue-600 text-sm">Ganti Password</button>
         </p>
@@ -81,22 +92,41 @@
 <!-- Aplikasi Utama (hidden sebelum login) -->
 <div id="app-container" class="hidden">
                     
-        <!-- Top Header (sama) -->
-            <header class="glass-header fixed top-0 w-full z-40 border-b border-gray-200 shadow-sm px-4 py-3 flex justify-between items-center bg-white/80 backdrop-blur-md">
-            <div class="flex items-center gap-2">
-                <div class="bg-blue-600 text-white p-2 rounded-lg">
-                    <i class="fa-solid fa-box-archive"></i>
-                </div>
-                <h1 class="text-lg font-bold text-gray-800 tracking-tight">
-                    INCOSYS <span class="hidden sm:inline text-gray-400 font-normal">| Inventory Control System</span>
-                </h1>
+        <!-- Top Header -->
+        <header class="fixed top-0 w-full z-40 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)] px-6 py-3 transition-all duration-300">
+    <div class="max-w-full mx-auto flex justify-between items-center">
+        
+        <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-md shadow-blue-500/30">
+                <i class="fa-solid fa-box-archive text-lg"></i>
             </div>
+            
+            <div class="flex items-center">
+                <h1 class="text-xl font-extrabold text-gray-800 tracking-tight">
+                    INCOSYS
+                </h1>
+                <span class="hidden sm:flex items-center ml-3 pl-3 border-l-2 border-gray-200/80 text-sm text-gray-500 font-medium tracking-wide">
+                    Inventory Control System
+                </span>
+            </div>
+        </div>
 
-            <button onclick="logout()" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
-                <span>Logout</span>
-                <i class="fa-solid fa-sign-out-alt"></i>
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button onclick="showChangePasswordModal()" 
+                    class="group flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-600 bg-transparent hover:bg-gray-100/80 hover:text-blue-600 rounded-xl transition-all duration-300">
+                <i class="fa-solid fa-key text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                <span class="hidden sm:inline">Ganti Sandi</span>
             </button>
-        </header>
+
+            <button onclick="logout()" 
+                    class="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 bg-red-50/50 hover:bg-red-500 hover:text-white border border-red-100 hover:border-red-500 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-red-500/20">
+                <span class="hidden sm:inline">Keluar</span>
+                <i class="fa-solid fa-arrow-right-from-bracket group-hover:translate-x-1 transition-transform duration-300"></i>
+            </button>
+        </div>
+
+    </div>
+</header>
 
         <!-- Main Content -->
         <main class="mt-16 p-4 flex-grow overflow-y-auto">
@@ -370,28 +400,55 @@ let currentUser = localStorage.getItem('currentUser');
 
     
         // Login
+            // Login
             async function handleLogin(e) {
                 e.preventDefault();
+                
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
                 
-                const res = await apiCall('login', { username, password });
-                if (res.status === 'success') {
-                    authToken = res.token;
-                    currentUser = res.username;
-                    localStorage.setItem('authToken', authToken);
-                    localStorage.setItem('currentUser', currentUser);
+                // Ambil elemen tombol dan isinya
+                const loginBtn = document.getElementById('login-btn');
+                const btnText = document.getElementById('btn-text');
+                const btnSpinner = document.getElementById('btn-spinner');
+
+                // --- STATE LOADING DIMULAI ---
+                loginBtn.disabled = true; // Nonaktifkan tombol agar tidak di-klik 2x
+                loginBtn.classList.add('opacity-80', 'cursor-not-allowed'); // Beri efek visual redup
+                btnText.textContent = 'Memproses...'; // Ubah teks (opsional)
+                btnSpinner.classList.remove('hidden'); // Tampilkan spinner
+
+                try {
+                    const res = await apiCall('login', { username, password });
                     
-                    // Tampilkan aplikasi
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('app-container').classList.remove('hidden');
-                    
-                    // Load data awal
-                    loadDashboard();
-                    
-                    Toast.fire({ icon: 'success', title: 'Login berhasil' });
-                } else {
-                    Swal.fire('Login Gagal', res.message, 'error');
+                    if (res.status === 'success') {
+                        authToken = res.token;
+                        currentUser = res.username;
+                        localStorage.setItem('authToken', authToken);
+                        localStorage.setItem('currentUser', currentUser);
+                        
+                        // Tampilkan aplikasi
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('app-container').classList.remove('hidden');
+                        
+                        // Load data awal
+                        loadDashboard();
+                        
+                        Toast.fire({ icon: 'success', title: 'Login berhasil' });
+                    } else {
+                        Swal.fire('Login Gagal', res.message, 'error');
+                    }
+                } catch (error) {
+                    // Tangani jika terjadi error jaringan / server down
+                    Swal.fire('Error', 'Terjadi kesalahan saat menghubungi server.', 'error');
+                    console.error('Login error:', error);
+                } finally {
+                    // --- STATE LOADING SELESAI ---
+                    // Blok ini akan selalu dijalankan baik sukses maupun gagal
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+                    btnText.textContent = 'Login'; // Kembalikan teks
+                    btnSpinner.classList.add('hidden'); // Sembunyikan spinner lagi
                 }
             }
 
@@ -456,7 +513,7 @@ let currentUser = localStorage.getItem('currentUser');
 
     // ========== KONFIGURASI ==========
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec';
-    const API_BASE_URLC = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec?action=logout';
+        // const API_BASE_URLC = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec?action=getAllOdners';
 
     // ========== STATE ==========
     let odnerData = [];
@@ -540,6 +597,7 @@ let currentUser = localStorage.getItem('currentUser');
             const res = await apiCall('getAllBoxes');
             if (res.status === 'success') {
                 boxData = res.data;
+                console.log('Data Box terbaru:', boxData);
             }
         }
 
