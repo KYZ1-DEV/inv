@@ -316,7 +316,6 @@
         </div>
 
         <!-- Print Area -->
-        <div id="print-area" class="hidden"></div>
 
         <!-- Loading Overlay -->
         <div id="loading-overlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] hidden flex justify-center items-center">
@@ -332,6 +331,8 @@
         </div>
 
 </div>
+        <div id="print-area" class="hidden"></div>
+
 
 
 <script>
@@ -400,7 +401,6 @@ let currentUser = localStorage.getItem('currentUser');
 
     
         // Login
-            // Login
             async function handleLogin(e) {
                 e.preventDefault();
                 
@@ -452,18 +452,39 @@ let currentUser = localStorage.getItem('currentUser');
                 }
             }
 
-            // Logout
-            function logout() {
-                apiCall('logout');
-                authToken = null;
-                currentUser = null;
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('currentUser');
-                
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('hidden');
-            }
 
+            async function logout() {
+                    const confirm = await Swal.fire({
+                        title: 'Yakin ingin logout?',
+                        text: 'Anda akan keluar dari aplikasi.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, logout',
+                        cancelButtonText: 'Batal'
+                    });
+
+                    if (!confirm.isConfirmed) return;
+
+
+                    try {
+                        await apiCall('logout');
+
+                        authToken = null;
+                        currentUser = null;
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('currentUser');
+
+                        document.getElementById('login-screen').classList.remove('hidden');
+                        document.getElementById('app-container').classList.add('hidden');
+
+                        
+                        Toast.fire({ icon: 'success', title: 'Logout berhasil' });
+
+                    } catch (error) {
+                        Swal.fire('Error', 'Gagal logout dari server.', 'error');
+                        console.error('Logout error:', error);
+                    }
+                }
 
             // Ganti Password Modal
             async function showChangePasswordModal() {
@@ -513,7 +534,7 @@ let currentUser = localStorage.getItem('currentUser');
 
     // ========== KONFIGURASI ==========
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec';
-        // const API_BASE_URLC = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec?action=getAllOdners';
+    const API_BASE_URLC = 'https://script.google.com/macros/s/AKfycbzhrFF3c6FeZErN85pVdZolGT40C6eqC_bf9ONWWY-bGp8YGwd3W1zeKveG25AIGX7g/exec?action=getAllBoxes';
 
     // ========== STATE ==========
     let odnerData = [];
@@ -580,6 +601,7 @@ let currentUser = localStorage.getItem('currentUser');
             const res = await apiCall('getAllBoxes');
             if (res.status === 'success') {
                 boxData = res.data;
+                // console.log(boxData);
                 renderBoxes(boxData);
             }
         }
@@ -597,7 +619,7 @@ let currentUser = localStorage.getItem('currentUser');
             const res = await apiCall('getAllBoxes');
             if (res.status === 'success') {
                 boxData = res.data;
-                console.log('Data Box terbaru:', boxData);
+                // console.log('Data Box terbaru:', boxData);
             }
         }
 
@@ -645,11 +667,12 @@ let currentUser = localStorage.getItem('currentUser');
                 }
 
         function renderBoxes(data) {
+            // console.log(data);
         const container = document.getElementById('box-list');
-        if (data.length === 0) {
-            container.innerHTML = `<div class="text-center py-10 text-gray-400"><i class="fa-solid fa-boxes-stacked text-4xl mb-3"></i><p>Belum ada data Box</p></div>`;
-            return;
-        }
+            if (data.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400"><i class="fa-solid fa-boxes-stacked text-4xl mb-3"></i><p>Belum ada data Box</p></div>`;
+                return;
+            }
 
         container.innerHTML = data.map(item => `
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -970,8 +993,12 @@ let currentUser = localStorage.getItem('currentUser');
     async function finishScanAndSelectBox() {
         if (scannedOdnerIDs.length === 0) return;
         
+        await loadDataBoxes();
         // Tampilkan pilihan box
-        const boxOptions = {};
+        
+        const boxOptions =  {};
+
+        // console.log(boxData);
         boxData.forEach(b => { boxOptions[b.BoxID] = `${b.NamaBox} (${b.Lokasi})`; });
         
         const { value: boxID } = await Swal.fire({
@@ -989,6 +1016,9 @@ let currentUser = localStorage.getItem('currentUser');
             odnerIDs: scannedOdnerIDs,
             boxID: boxID
         });
+        // console.log('Scanner IDs:', scannedOdnerIDs);
+
+        // console.log('rest call', res);
         
         if (res.status === 'success') {
             Swal.fire('Berhasil', res.message, 'success');
